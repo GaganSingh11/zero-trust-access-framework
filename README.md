@@ -7,17 +7,45 @@ and critical infrastructure environments.
 
 ## Architecture
 
-```
-Client ──► FastAPI (port 8000) ──► Keycloak (port 8080)
-              │                         │
-              │  validate JWT (JWKS)    │  issue JWT
-              │◄────────────────────────┘
-              │
-              ├── ALLOW → return resource
-              └── DENY  → 403 + audit log entry
+```mermaid
+flowchart TB
+    CLIENT["🖥️  Client\ncurl · Browser · Application"]
+
+    subgraph DOCKER["🐳  Docker Network — zt-network"]
+        subgraph KC["  Keycloak  ·  port 8080  "]
+            KC_A["Realm: zero-trust-demo\nUsers · Roles · Client Config"]
+            KC_B["🔐  MFA — TOTP Browser Flow"]
+            KC_C["POST /token  —  JWT Issuance"]
+            KC_D["GET /certs  —  JWKS Public Keys"]
+        end
+
+        subgraph FASTAPI["  FastAPI  ·  port 8000  "]
+            F_MAIN["main.py\nRoute Definitions"]
+            F_AUTH["auth.py\nJWT Decode · JWKS Cache\nIssuer + Expiry Validation"]
+            F_RBAC["rbac.py\nRole Enforcement\nALLOW / DENY Decision"]
+            F_LOG["logger.py\nStructured JSON Audit Logger"]
+            F_MAIN --> F_AUTH
+            F_AUTH --> F_RBAC
+            F_RBAC --> F_LOG
+        end
+    end
+
+    AUDITLOG[("📄 logs/audit.log")]
+    REALMCFG["📄 keycloak/realm-export.json"]
+    DOTENV["🔐 .env  Secrets"]
+
+    CLIENT -->|"① POST /auth/token  {username, password}"| F_MAIN
+    F_MAIN -->|"② password grant"| KC_C
+    KC_C -->|"③ signed JWT  RS256"| F_MAIN
+    F_MAIN -->|"④ JWT  TTL 5 min"| CLIENT
+    CLIENT -->|"⑤ GET /protected  Bearer JWT"| F_RBAC
+    F_AUTH -->|"⑥ fetch JWKS  cached"| KC_D
+    F_LOG -->|"⑦ append"| AUDITLOG
+    REALMCFG -->|"auto-import on startup"| KC
+    DOTENV -->|"env vars"| FASTAPI
 ```
 
-Full architecture diagram: [docs/architecture.md](docs/architecture.md)
+Full diagrams (auth flow, RBAC decision tree, role matrix, token lifecycle): [docs/architecture.md](docs/architecture.md)
 
 ## Stack
 
