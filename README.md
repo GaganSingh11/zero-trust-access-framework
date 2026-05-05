@@ -5,6 +5,23 @@ Demonstrates centralized identity, SSO, MFA, RBAC, JWT validation, secrets manag
 and structured audit logging — mapped to enterprise tools used in healthcare, banking,
 and critical infrastructure environments.
 
+## Project Brief
+
+This project addresses the failure of perimeter-based security models. Real-world incidents
+(SolarWinds, Uber, LastPass) showed that once credentials are stolen, implicit trust inside
+a network leads to lateral movement and privilege escalation. This framework implements
+**Zero Trust**: every request is verified regardless of origin, roles are enforced per endpoint,
+and every access decision is permanently logged.
+
+**Full project report:** [docs/project-report.md](docs/project-report.md) — includes brainstorm,
+timeline, AI prompts used, and lessons learned.
+
+**Security research:** [docs/vulnerability-research.md](docs/vulnerability-research.md) — CVE
+analysis, OWASP mapping, accepted risks.
+
+**Threat model:** [docs/threat-model.md](docs/threat-model.md) — STRIDE analysis, attack surface
+map, defense layers, production hardening roadmap.
+
 ## Architecture
 
 ```mermaid
@@ -46,6 +63,8 @@ flowchart TB
 ```
 
 Full diagrams (auth flow, RBAC decision tree, role matrix, token lifecycle): [docs/architecture.md](docs/architecture.md)
+
+Full testing analysis (error analysis, edge cases, all 26 test cases): [docs/testing-analysis.md](docs/testing-analysis.md)
 
 ## Stack
 
@@ -169,11 +188,15 @@ zero-trust-access-framework/
 ├── keycloak/
 │   └── realm-export.json  # Pre-configured realm (users, roles, client, MFA)
 ├── docs/
-│   ├── architecture.md            # System design and request flow
+│   ├── architecture.md            # System design and request flow (5 Mermaid diagrams)
 │   ├── access-control-matrix.md   # RBAC matrix + enterprise tool mapping
-│   └── demo-flow.md               # Step-by-step demo commands
+│   ├── demo-flow.md               # Step-by-step demo commands
+│   ├── project-report.md          # Full report: brainstorm, timeline, AI prompts, lessons learned
+│   ├── vulnerability-research.md  # CVE analysis, OWASP mapping, accepted risks
+│   ├── threat-model.md            # STRIDE model, attack surface map, defense layers
+│   └── testing-analysis.md        # Test plan, error analysis, all 26 test cases
 ├── scripts/
-│   └── test_access.sh   # Automated access matrix test
+│   └── test_access.sh   # Automated test: 26 cases including edge cases + tampered tokens
 ├── logs/                # Audit log output (git-ignored)
 ├── docker-compose.yml
 ├── .env.example
